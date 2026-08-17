@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CRM.Data.Models;
 
-public partial class GapsCrmContext : DbContext
+public partial class CrmContext : DbContext
 {
-    public GapsCrmContext(DbContextOptions<GapsCrmContext> options)
+    public CrmContext(DbContextOptions<CrmContext> options)
         : base(options)
     {
     }
