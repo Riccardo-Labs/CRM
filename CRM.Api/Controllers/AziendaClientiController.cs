@@ -6,17 +6,13 @@ namespace CRM.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AziendaClientiController : ControllerBase
+    public class AziendaClientiController(CrmContext context) : ControllerBase
     {
-        private readonly CrmContext _context;
-        public AziendaClientiController(CrmContext context)
-        {
-            _context = context;
-        }
+        private readonly CrmContext _context = context;
 
         [HttpGet]
         // GET: api/AziendaClienti
-        public async Task<ActionResult<IEnumerable<AziendaCliente>>> GetAllAziendeClienti()
+        public async Task<ActionResult<IEnumerable<AziendaCliente>>> GetAziendeClienti()
         {
             var aziendeClienti = await _context.AziendaClienti.ToListAsync();
             return Ok(aziendeClienti);
@@ -69,6 +65,22 @@ namespace CRM.Api.Controllers
                     throw;
                 }
             }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        // DELETE: api/AziendaClienti/5
+        public async Task<IActionResult> DeleteAziendaCliente(int id)
+        {
+            var aziendaCliente = await _context.AziendaClienti.FindAsync(id);
+            if (aziendaCliente == null)
+            {
+                return NotFound();
+            }
+
+            _context.AziendaClienti.Remove(aziendaCliente);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }

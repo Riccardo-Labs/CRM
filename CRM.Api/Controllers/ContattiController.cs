@@ -6,13 +6,9 @@ namespace CRM.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ContattiController : ControllerBase
+    public class ContattiController(CrmContext context) : ControllerBase
     {
-        private readonly CrmContext _context;
-        public ContattiController(CrmContext context)
-        {
-            _context = context;
-        }
+        private readonly CrmContext _context = context;
 
         [HttpGet]
         // GET: api/Contatti
@@ -81,6 +77,22 @@ namespace CRM.Api.Controllers
                     throw;
                 }
             }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        // DELETE: api/Contatti/5
+        public async Task<IActionResult> DeleteContatto(int id)
+        {
+            var contatto = await _context.Contatti.FindAsync(id);
+            if (contatto == null)
+            {
+                return NotFound();
+            }
+
+            _context.Contatti.Remove(contatto);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }

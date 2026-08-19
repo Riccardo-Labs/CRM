@@ -6,13 +6,9 @@ namespace CRM.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AgentiController : ControllerBase
+    public class AgentiController(CrmContext context) : ControllerBase
     {
-        private readonly CrmContext _context;
-        public AgentiController(CrmContext context)
-        {
-            _context = context;
-        }
+        private readonly CrmContext _context = context;
 
         [HttpGet]
         // GET: api/Agenti
@@ -69,6 +65,22 @@ namespace CRM.Api.Controllers
                     throw;
                 }
             }
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        // DELETE: api/Agenti/5
+        public async Task<IActionResult> DeleteAgente(int id)
+        {
+            var agente = await _context.Agenti.FindAsync(id);
+            if (agente == null)
+            {
+                return NotFound();
+            }
+
+            _context.Agenti.Remove(agente);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }

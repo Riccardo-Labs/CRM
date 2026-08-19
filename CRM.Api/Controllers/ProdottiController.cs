@@ -7,14 +7,9 @@ namespace CRM.Api.Controllers
     
 [Route("api/[controller]")]
 [ApiController]
-public class ProdottiController : ControllerBase
+public class ProdottiController(CrmContext context) : ControllerBase
 {
-    private readonly CrmContext _context;
-
-    public ProdottiController(CrmContext context)
-    {
-        _context = context;
-    }
+    private readonly CrmContext _context = context;
 
     [HttpGet]
     // GET: api/Prodotti
