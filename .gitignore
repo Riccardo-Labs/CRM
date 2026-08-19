@@ -11,3 +11,6 @@ obj/
 ## Configurazione locale con credenziali
 appsettings.Development.json
 appsettings.Local.json
+
+## Claude
+CLAUDE.md

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace CRM.Data.Models;
+﻿namespace CRM.Data.Models;
 
 public partial class Agente
 {
