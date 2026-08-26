@@ -79,7 +79,7 @@ namespace CRM.Api.Controllers
                 return NotFound();
             }
 
-            _context.AziendaClienti.Remove(aziendaCliente);
+            aziendaCliente.Attivo = false;
             await _context.SaveChangesAsync();
 
             return NoContent();

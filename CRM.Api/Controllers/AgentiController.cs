@@ -78,8 +78,7 @@ namespace CRM.Api.Controllers
             {
                 return NotFound();
             }
-
-            _context.Agenti.Remove(agente);
+            agente.Attivo = false;
             await _context.SaveChangesAsync();
 
             return NoContent();

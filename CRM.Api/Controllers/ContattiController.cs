@@ -91,7 +91,7 @@ namespace CRM.Api.Controllers
                 return NotFound();
             }
 
-            _context.Contatti.Remove(contatto);
+            contatto.Attivo = false;
             await _context.SaveChangesAsync();
 
             return NoContent();

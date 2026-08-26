@@ -87,7 +87,7 @@ public class ProdottiController(CrmContext context) : ControllerBase
             return NotFound();
         }
 
-        _context.Prodotti.Remove(prodotto);
+        prodotto.Attivo = false;
         await _context.SaveChangesAsync();
 
         return NoContent();
