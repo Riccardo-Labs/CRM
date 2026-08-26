@@ -72,7 +72,7 @@ namespace CRM.Api.Controllers
                 return NotFound();
             }
 
-            var statiChiusi = new[] { "Vinto", "Perso" };
+            var statiChiusi = new[] { "Vinto", "Perso", "Annullato" };
             if (statiChiusi.Contains(statoAttuale) && ordine.Stato != statoAttuale)
             {
                 return BadRequest($"L'ordine è già chiuso (stato: {statoAttuale}): non è possibile modificarne lo stato.");
