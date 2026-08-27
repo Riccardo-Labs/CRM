@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -32,35 +33,54 @@ namespace CRM.Api.Controllers
 
         [HttpPost]
         // POST: api/Contatti
-        public async Task<ActionResult<Contatto>> PostContatto(Contatto contatto)
+        public async Task<ActionResult<Contatto>> PostContatto(ContattoCreateDto contatto)
         {
-            var aziendaCliente = await _context.AziendaClienti.FindAsync(contatto.IdAziendaCliente);
-            if (aziendaCliente == null)
+            if (!await _context.AziendaClienti.AnyAsync(a => a.IdAziendaCliente == contatto.IdAziendaCliente))
             {
                 return BadRequest("L'azienda cliente associata non esiste.");
             }
 
-            _context.Contatti.Add(contatto);
+            var nuovoContatto = new Contatto
+            {
+                IdAziendaCliente = contatto.IdAziendaCliente,
+                Nome = contatto.Nome,
+                Cognome = contatto.Cognome,
+                Ruolo = contatto.Ruolo,
+                Email = contatto.Email,
+                Telefono = contatto.Telefono,
+                Cellulare = contatto.Cellulare,
+                Note = contatto.Note,
+                Attivo = true
+            };
+            _context.Contatti.Add(nuovoContatto);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetContatto), new { id = contatto.IdContatto }, contatto);
+            return CreatedAtAction(nameof(GetContatto), new { id = nuovoContatto.IdContatto }, nuovoContatto);
         }
 
         [HttpPut("{id}")]
         // PUT: api/Contatti/5
-        public async Task<IActionResult> PutContatto(int id, Contatto contatto)
+        public async Task<IActionResult> PutContatto(int id, ContattoUpdateDto contatto)
         {
-            if (id != contatto.IdContatto)
+            var contattoEsistente = await _context.Contatti.FindAsync(id);
+            if (contattoEsistente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            var aziendaCliente = await _context.AziendaClienti.FindAsync(contatto.IdAziendaCliente);
-            if (aziendaCliente == null)
+            if (!await _context.AziendaClienti.AnyAsync(a => a.IdAziendaCliente == contatto.IdAziendaCliente))
             {
                 return BadRequest("L'azienda cliente associata non esiste.");
             }
 
-            _context.Entry(contatto).State = EntityState.Modified;
+            contattoEsistente.IdAziendaCliente = contatto.IdAziendaCliente;
+            contattoEsistente.Nome = contatto.Nome;
+            contattoEsistente.Cognome = contatto.Cognome;
+            contattoEsistente.Ruolo = contatto.Ruolo;
+            contattoEsistente.Email = contatto.Email;
+            contattoEsistente.Telefono = contatto.Telefono;
+            contattoEsistente.Cellulare = contatto.Cellulare;
+            contattoEsistente.Note = contatto.Note;
+            contattoEsistente.Attivo = contatto.Attivo;
 
             try
             {
