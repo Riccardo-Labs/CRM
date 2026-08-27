@@ -21,14 +21,31 @@ namespace CRM.Api.Controllers
 
         [HttpGet("{id}")]
         // GET: api/Contatti/5
-        public async Task<ActionResult<Contatto>> GetContatto(int id)
+        public async Task<ActionResult<ContattoResponseDto>> GetContatto(int id)
         {
-            var contatto = await _context.Contatti.FindAsync(id);
+            var contatto = await _context.Contatti
+                .Include(c => c.IdAziendaClienteNavigation)
+                .FirstOrDefaultAsync(c => c.IdContatto == id);
+
             if (contatto == null)
             {
                 return NotFound();
             }
-            return Ok(contatto);
+
+            var risposta = new ContattoResponseDto
+            {
+                IdContatto = contatto.IdContatto,
+                IdAziendaCliente = contatto.IdAziendaCliente,
+                RagioneSocialeAzienda = contatto.IdAziendaClienteNavigation.RagioneSociale,
+                Nome = contatto.Nome,
+                Cognome = contatto.Cognome,
+                Ruolo = contatto.Ruolo,
+                Email = contatto.Email,
+                Telefono = contatto.Telefono,
+                Cellulare = contatto.Cellulare
+            };
+
+            return Ok(risposta);
         }
 
         [HttpPost]

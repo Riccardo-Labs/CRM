@@ -20,16 +20,37 @@ namespace CRM.Api.Controllers
 
         [HttpGet("{id}")]
         // GET: api/LogAttivita/5
-        public async Task<ActionResult<LogAttivita>> GetLogAttivitaById(int id)
+        public async Task<ActionResult<LogAttivitaResponseDto>> GetLogAttivitaById(int id)
         {
-            var logAttivita = await _context.LogAttivita.FindAsync(id);
+            var logAttivita = await _context.LogAttivita
+                .Include(l => l.IdAgenteNavigation)
+                .Include(l => l.IdContattoNavigation)
+                .FirstOrDefaultAsync(l => l.IdLogAttivita == id);
 
             if (logAttivita == null)
             {
                 return NotFound();
             }
 
-            return Ok(logAttivita);
+            var risposta = new LogAttivitaResponseDto
+            {
+                IdLogAttivita = logAttivita.IdLogAttivita,
+                IdOrdine = logAttivita.IdOrdine,
+                IdContatto = logAttivita.IdContatto,
+                NomeContatto = logAttivita.IdContattoNavigation != null
+                    ? $"{logAttivita.IdContattoNavigation.Nome} {logAttivita.IdContattoNavigation.Cognome}"
+                    : null,
+                IdAgente = logAttivita.IdAgente,
+                NomeAgente = $"{logAttivita.IdAgenteNavigation.Nome} {logAttivita.IdAgenteNavigation.Cognome}",
+                DataOra = logAttivita.DataOra,
+                TipoAttivita = logAttivita.TipoAttivita,
+                Oggetto = logAttivita.Oggetto,
+                Descrizione = logAttivita.Descrizione,
+                Esito = logAttivita.Esito,
+                AllegatoUrl = logAttivita.AllegatoUrl
+            };
+
+            return Ok(risposta);
         }
 
         [HttpPost]

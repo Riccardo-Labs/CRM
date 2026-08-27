@@ -49,6 +49,8 @@ namespace CRM.Api.Controllers
                 Contatti = aziendaCliente.Contatti.Where(c => c.Attivo).Select(c => new ContattoResponseDto
                 {
                     IdContatto = c.IdContatto,
+                    IdAziendaCliente = aziendaCliente.IdAziendaCliente,
+                    RagioneSocialeAzienda = aziendaCliente.RagioneSociale,
                     Nome = c.Nome,
                     Cognome = c.Cognome,
                     Ruolo = c.Ruolo,
