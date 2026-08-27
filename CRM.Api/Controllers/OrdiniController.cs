@@ -20,16 +20,47 @@ namespace CRM.Api.Controllers
 
         [HttpGet("{id}")]
         // GET: api/Ordini/5
-        public async Task<ActionResult<Ordine>> GetOrdine(int id)
+        public async Task<ActionResult<OrdineResponseDto>> GetOrdine(int id)
         {
-            var ordine = await _context.Ordini.FindAsync(id);
+            var ordine = await _context.Ordini
+                .Include(o => o.RigaOrdini)
+                    .ThenInclude(r => r.IdProdottoNavigation)
+                .Include(o => o.IdAziendaClienteNavigation)
+                .Include(o => o.IdAgenteNavigation)
+                .Include(o => o.IdContattoRiferimentoNavigation)
+                .FirstOrDefaultAsync(o => o.IdOrdine == id);
 
             if (ordine == null)
             {
                 return NotFound();
             }
 
-            return Ok(ordine);
+            var risposta = new OrdineResponseDto
+            {
+                IdOrdine = ordine.IdOrdine,
+                IdAziendaCliente = ordine.IdAziendaCliente,
+                RagioneSocialeAzienda = ordine.IdAziendaClienteNavigation.RagioneSociale,
+                IdAgente = ordine.IdAgente,
+                NomeAgente = $"{ordine.IdAgenteNavigation.Nome} {ordine.IdAgenteNavigation.Cognome}",
+                IdContattoRiferimento = ordine.IdContattoRiferimento,
+                NomeContattoRiferimento = ordine.IdContattoRiferimentoNavigation != null
+                    ? $"{ordine.IdContattoRiferimentoNavigation.Nome} {ordine.IdContattoRiferimentoNavigation.Cognome}"
+                    : null,
+                Stato = ordine.Stato,
+                DataOrdine = ordine.DataOrdine,
+                RigaOrdini = ordine.RigaOrdini.Select(r => new RigaOrdineResponseDto
+                {
+                    IdRigaOrdine = r.IdRigaOrdine,
+                    IdProdotto = r.IdProdotto,
+                    NomeProdotto = r.IdProdottoNavigation.Nome,
+                    PrezzoPattuito = r.PrezzoPattuito,
+                    Sconto = r.Sconto,
+                    Quantita = r.Quantita,
+                    TotaleRiga = r.TotaleRiga
+                }).ToList()
+            };
+
+            return Ok(risposta);
         }
 
         [HttpPost]

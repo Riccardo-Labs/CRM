@@ -21,14 +21,44 @@ namespace CRM.Api.Controllers
 
         [HttpGet("{id}")]
         // GET: api/AziendaClienti/5
-        public async Task<ActionResult<AziendaCliente>> GetAziendaCliente(int id)
+        public async Task<ActionResult<AziendaClienteResponseDto>> GetAziendaCliente(int id)
         {
-            var aziendaCliente = await _context.AziendaClienti.FindAsync(id);
+            var aziendaCliente = await _context.AziendaClienti
+                .Include(a => a.Contatti)
+                .FirstOrDefaultAsync(a => a.IdAziendaCliente == id);
+            
             if (aziendaCliente == null)
             {
                 return NotFound();
             }
-            return Ok(aziendaCliente);
+
+            var risposta = new AziendaClienteResponseDto
+            {
+                IdAziendaCliente = aziendaCliente.IdAziendaCliente,
+                RagioneSociale = aziendaCliente.RagioneSociale,
+                PartitaIva = aziendaCliente.PartitaIva,
+                CodiceFiscale = aziendaCliente.CodiceFiscale,
+                Indirizzo = aziendaCliente.Indirizzo,
+                Citta = aziendaCliente.Citta,
+                Cap = aziendaCliente.Cap,
+                Provincia = aziendaCliente.Provincia,
+                Email = aziendaCliente.Email,
+                Telefono = aziendaCliente.Telefono,
+                SitoWeb = aziendaCliente.SitoWeb,
+                Note = aziendaCliente.Note,
+                Contatti = aziendaCliente.Contatti.Where(c => c.Attivo).Select(c => new ContattoResponseDto
+                {
+                    IdContatto = c.IdContatto,
+                    Nome = c.Nome,
+                    Cognome = c.Cognome,
+                    Ruolo = c.Ruolo,
+                    Email = c.Email,
+                    Telefono = c.Telefono,
+                    Cellulare = c.Cellulare
+                }).ToList()
+            };
+
+            return Ok(risposta);
         }
 
         [HttpPost]
