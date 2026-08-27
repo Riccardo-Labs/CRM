@@ -13,10 +13,14 @@ namespace CRM.Api.Controllers
 
         [HttpGet]
         // GET: api/Contatti
-        public async Task<ActionResult<IEnumerable<Contatto>>> GetContatti()
+        public async Task<ActionResult<IEnumerable<Contatto>>> GetContatti([FromQuery] int? idAziendaCliente)
         {
-            var contatti = await _context.Contatti.Where(c => c.Attivo).ToListAsync();
-            return Ok(contatti);
+            var query = _context.Contatti.Where(c => c.Attivo);
+            if (idAziendaCliente != null)
+            {
+                query = query.Where(c => c.IdAziendaCliente == idAziendaCliente);
+            }
+            return Ok(await query.ToListAsync());
         }
 
         [HttpGet("{id}")]

@@ -13,9 +13,25 @@ namespace CRM.Api.Controllers
 
         [HttpGet]
         // GET: api/Ordini
-        public async Task<ActionResult<IEnumerable<Ordine>>> GetOrdini()
+        public async Task<ActionResult<IEnumerable<Ordine>>> GetOrdini(
+            [FromQuery] string? stato,
+            [FromQuery] int? idAziendaCliente,
+            [FromQuery] int? idAgente)
         {
-            return Ok(await _context.Ordini.ToListAsync());
+            var query = _context.Ordini.AsQueryable();
+            if (stato != null)
+            {
+                query = query.Where(o => o.Stato == stato);
+            }
+            if (idAziendaCliente != null)
+            {
+                query = query.Where(o => o.IdAziendaCliente == idAziendaCliente);
+            }
+            if (idAgente != null)
+            {
+                query = query.Where(o => o.IdAgente == idAgente);
+            }
+            return Ok(await query.ToListAsync());
         }
 
         [HttpGet("{id}")]

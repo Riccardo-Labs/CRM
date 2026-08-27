@@ -13,9 +13,25 @@ namespace CRM.Api.Controllers
 
         [HttpGet]
         // GET: api/LogAttivita
-        public async Task<ActionResult<IEnumerable<LogAttivita>>> GetLogAttivita()
+        public async Task<ActionResult<IEnumerable<LogAttivita>>> GetLogAttivita(
+            [FromQuery] int? idAgente,
+            [FromQuery] int? idOrdine,
+            [FromQuery] string? tipoAttivita)
         {
-            return Ok(await _context.LogAttivita.ToListAsync());
+            var query = _context.LogAttivita.AsQueryable();
+            if (idAgente != null)
+            {
+                query = query.Where(l => l.IdAgente == idAgente);
+            }
+            if (idOrdine != null)
+            {
+                query = query.Where(l => l.IdOrdine == idOrdine);
+            }
+            if (tipoAttivita != null)
+            {
+                query = query.Where(l => l.TipoAttivita == tipoAttivita);
+            }
+            return Ok(await query.ToListAsync());
         }
 
         [HttpGet("{id}")]
