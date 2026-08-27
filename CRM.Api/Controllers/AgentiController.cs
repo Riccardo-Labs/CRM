@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -32,23 +33,47 @@ namespace CRM.Api.Controllers
 
         [HttpPost]
         // POST: api/Agenti
-        public async Task<ActionResult<Agente>> PostAgente(Agente agente)
+        public async Task<ActionResult<Agente>> PostAgente(AgenteCreateDto agente)
         {
-            _context.Agenti.Add(agente);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetAgente), new { id = agente.IdAgente }, agente);
+            var newAgente = new Agente
+            {
+                Nome = agente.Nome,
+                Cognome = agente.Cognome,
+                Email = agente.Email,
+                Telefono = agente.Telefono,
+                DataAssunzione = agente.DataAssunzione,
+                Attivo = true
+            };
+            _context.Agenti.Add(newAgente);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return Conflict("Email già in uso da un altro agente.");
+            }
+
+            return CreatedAtAction(nameof(GetAgente), new { id = newAgente.IdAgente }, newAgente);
         }
 
         [HttpPut("{id}")]
         // PUT: api/Agenti/5
-        public async Task<IActionResult> PutAgente(int id, Agente agente)
+        public async Task<IActionResult> PutAgente(int id, AgenteUpdateDto agente)
         {
-            if (id != agente.IdAgente)
+            var agenteEsistente = await _context.Agenti.FindAsync(id);
+            if (agenteEsistente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(agente).State = EntityState.Modified;
+            agenteEsistente.Nome = agente.Nome;
+            agenteEsistente.Cognome = agente.Cognome;
+            agenteEsistente.Email = agente.Email;
+            agenteEsistente.Telefono = agente.Telefono;
+            agenteEsistente.DataAssunzione = agente.DataAssunzione;
+            agenteEsistente.Attivo = agente.Attivo;
 
             try
             {
@@ -64,6 +89,10 @@ namespace CRM.Api.Controllers
                 {
                     throw;
                 }
+            }
+            catch (DbUpdateException)
+            {
+                return Conflict("Email già in uso da un altro agente.");
             }
 
             return NoContent();

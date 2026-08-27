@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -32,23 +33,59 @@ namespace CRM.Api.Controllers
 
         [HttpPost]
         // POST: api/AziendaClienti
-        public async Task<ActionResult<AziendaCliente>> PostAziendaCliente(AziendaCliente aziendaCliente)
+        public async Task<ActionResult<AziendaCliente>> PostAziendaCliente(AziendaClienteCreateDto aziendaCliente)
         {
-            _context.AziendaClienti.Add(aziendaCliente);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetAziendaCliente), new { id = aziendaCliente.IdAziendaCliente }, aziendaCliente);
+            var nuovaAziendaCliente = new AziendaCliente
+            {
+                RagioneSociale = aziendaCliente.RagioneSociale,
+                PartitaIva = aziendaCliente.PartitaIva,
+                CodiceFiscale = aziendaCliente.CodiceFiscale,
+                Indirizzo = aziendaCliente.Indirizzo,
+                Citta = aziendaCliente.Citta,
+                Cap = aziendaCliente.Cap,
+                Provincia = aziendaCliente.Provincia,
+                Email = aziendaCliente.Email,
+                Telefono = aziendaCliente.Telefono,
+                SitoWeb = aziendaCliente.SitoWeb,
+                Note = aziendaCliente.Note,
+                Attivo = true
+            };
+            _context.AziendaClienti.Add(nuovaAziendaCliente);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return Conflict("Partita IVA già in uso da un'altra azienda cliente.");
+            }
+
+            return CreatedAtAction(nameof(GetAziendaCliente), new { id = nuovaAziendaCliente.IdAziendaCliente }, nuovaAziendaCliente);
         }
 
         [HttpPut("{id}")]
         // PUT: api/AziendaClienti/5
-        public async Task<IActionResult> PutAziendaCliente(int id, AziendaCliente aziendaCliente)
+        public async Task<IActionResult> PutAziendaCliente(int id, AziendaClienteUpdateDto aziendaCliente)
         {
-            if (id != aziendaCliente.IdAziendaCliente)
+            var aziendaClienteEsistente = await _context.AziendaClienti.FindAsync(id);
+            if (aziendaClienteEsistente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(aziendaCliente).State = EntityState.Modified;
+            aziendaClienteEsistente.RagioneSociale = aziendaCliente.RagioneSociale;
+            aziendaClienteEsistente.PartitaIva = aziendaCliente.PartitaIva;
+            aziendaClienteEsistente.CodiceFiscale = aziendaCliente.CodiceFiscale;
+            aziendaClienteEsistente.Indirizzo = aziendaCliente.Indirizzo;
+            aziendaClienteEsistente.Citta = aziendaCliente.Citta;
+            aziendaClienteEsistente.Cap = aziendaCliente.Cap;
+            aziendaClienteEsistente.Provincia = aziendaCliente.Provincia;
+            aziendaClienteEsistente.Email = aziendaCliente.Email;
+            aziendaClienteEsistente.Telefono = aziendaCliente.Telefono;
+            aziendaClienteEsistente.SitoWeb = aziendaCliente.SitoWeb;
+            aziendaClienteEsistente.Note = aziendaCliente.Note;
+            aziendaClienteEsistente.Attivo = aziendaCliente.Attivo;
 
             try
             {
@@ -64,6 +101,10 @@ namespace CRM.Api.Controllers
                 {
                     throw;
                 }
+            }
+            catch (DbUpdateException)
+            {
+                return Conflict("Partita IVA già in uso da un'altra azienda cliente.");
             }
 
             return NoContent();

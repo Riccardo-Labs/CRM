@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -34,24 +35,47 @@ public class ProdottiController(CrmContext context) : ControllerBase
 
     [HttpPost]
     // POST: api/Prodotti
-    public async Task<ActionResult<Prodotto>> PostProdotto(Prodotto prodotto)
+    public async Task<ActionResult<Prodotto>> PostProdotto(ProdottoCreateDto prodotto)
     {
-        _context.Prodotti.Add(prodotto);
-        await _context.SaveChangesAsync();
+        var nuovoProdotto = new Prodotto
+        {
+            Nome = prodotto.Nome,
+            Descrizione = prodotto.Descrizione,
+            Tipo = prodotto.Tipo,
+            Codice = prodotto.Codice,
+            PrezzoListino = prodotto.PrezzoListino,
+            Attivo = true
+        };
+        _context.Prodotti.Add(nuovoProdotto);
 
-        return CreatedAtAction(nameof(GetProdotto), new { id = prodotto.IdProdotto }, prodotto);
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict("Codice già in uso da un altro prodotto.");
+        }
+
+        return CreatedAtAction(nameof(GetProdotto), new { id = nuovoProdotto.IdProdotto }, nuovoProdotto);
     }
 
     [HttpPut("{id}")]
     // PUT: api/Prodotti/5
-    public async Task<IActionResult> PutProdotto(int id, Prodotto prodotto)
+    public async Task<IActionResult> PutProdotto(int id, ProdottoUpdateDto prodotto)
     {
-        if (id != prodotto.IdProdotto)
+        var prodottoEsistente = await _context.Prodotti.FindAsync(id);
+        if (prodottoEsistente == null)
         {
-            return BadRequest();
+            return NotFound();
         }
 
-        _context.Entry(prodotto).State = EntityState.Modified;
+        prodottoEsistente.Nome = prodotto.Nome;
+        prodottoEsistente.Descrizione = prodotto.Descrizione;
+        prodottoEsistente.Tipo = prodotto.Tipo;
+        prodottoEsistente.Codice = prodotto.Codice;
+        prodottoEsistente.PrezzoListino = prodotto.PrezzoListino;
+        prodottoEsistente.Attivo = prodotto.Attivo;
 
         try
         {
@@ -67,6 +91,10 @@ public class ProdottiController(CrmContext context) : ControllerBase
             {
                 throw;
             }
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict("Codice già in uso da un altro prodotto.");
         }
 
         return NoContent();
