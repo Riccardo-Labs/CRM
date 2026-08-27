@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -33,36 +34,56 @@ namespace CRM.Api.Controllers
 
         [HttpPost]
         // POST: api/LogAttivita
-        public async Task<ActionResult<LogAttivita>> PostLogAttivita(LogAttivita logAttivita)
+        public async Task<ActionResult<LogAttivita>> PostLogAttivita(LogAttivitaCreateDto logAttivita)
         {
-            var erroreFk = await ValidaForeignKeyAsync(logAttivita);
+            var erroreFk = await ValidaForeignKeyAsync(logAttivita.IdAgente, logAttivita.IdOrdine, logAttivita.IdContatto);
             if (erroreFk != null)
             {
                 return BadRequest(erroreFk);
             }
 
-            _context.LogAttivita.Add(logAttivita);
+            var nuovoLogAttivita = new LogAttivita
+            {
+                IdOrdine = logAttivita.IdOrdine,
+                IdContatto = logAttivita.IdContatto,
+                IdAgente = logAttivita.IdAgente,
+                TipoAttivita = logAttivita.TipoAttivita,
+                Oggetto = logAttivita.Oggetto,
+                Descrizione = logAttivita.Descrizione,
+                Esito = logAttivita.Esito,
+                AllegatoUrl = logAttivita.AllegatoUrl
+                // DataOra non valorizzata: EF la esclude dall'INSERT, si applica il default DB GETDATE().
+            };
+            _context.LogAttivita.Add(nuovoLogAttivita);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLogAttivitaById), new { id = logAttivita.IdLogAttivita }, logAttivita);
+            return CreatedAtAction(nameof(GetLogAttivitaById), new { id = nuovoLogAttivita.IdLogAttivita }, nuovoLogAttivita);
         }
 
         [HttpPut("{id}")]
         // PUT: api/LogAttivita/5
-        public async Task<IActionResult> PutLogAttivita(int id, LogAttivita logAttivita)
+        public async Task<IActionResult> PutLogAttivita(int id, LogAttivitaUpdateDto logAttivita)
         {
-            if (id != logAttivita.IdLogAttivita)
+            var logAttivitaEsistente = await _context.LogAttivita.FindAsync(id);
+            if (logAttivitaEsistente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            var erroreFk = await ValidaForeignKeyAsync(logAttivita);
+            var erroreFk = await ValidaForeignKeyAsync(logAttivita.IdAgente, logAttivita.IdOrdine, logAttivita.IdContatto);
             if (erroreFk != null)
             {
                 return BadRequest(erroreFk);
             }
 
-            _context.Entry(logAttivita).State = EntityState.Modified;
+            logAttivitaEsistente.IdOrdine = logAttivita.IdOrdine;
+            logAttivitaEsistente.IdContatto = logAttivita.IdContatto;
+            logAttivitaEsistente.IdAgente = logAttivita.IdAgente;
+            logAttivitaEsistente.TipoAttivita = logAttivita.TipoAttivita;
+            logAttivitaEsistente.Oggetto = logAttivita.Oggetto;
+            logAttivitaEsistente.Descrizione = logAttivita.Descrizione;
+            logAttivitaEsistente.Esito = logAttivita.Esito;
+            logAttivitaEsistente.AllegatoUrl = logAttivita.AllegatoUrl;
 
             try
             {
@@ -100,21 +121,21 @@ namespace CRM.Api.Controllers
         }
 
         // Metodo privato per validare le foreign key
-        private async Task<string?> ValidaForeignKeyAsync(LogAttivita logAttivita)
+        private async Task<string?> ValidaForeignKeyAsync(int idAgente, int? idOrdine, int? idContatto)
         {
-            if (!await _context.Agenti.AnyAsync(a => a.IdAgente == logAttivita.IdAgente))
+            if (!await _context.Agenti.AnyAsync(a => a.IdAgente == idAgente))
             {
                 return "L'agente associato non esiste.";
             }
 
-            if (logAttivita.IdOrdine != null &&
-                !await _context.Ordini.AnyAsync(o => o.IdOrdine == logAttivita.IdOrdine))
+            if (idOrdine != null &&
+                !await _context.Ordini.AnyAsync(o => o.IdOrdine == idOrdine))
             {
                 return "L'ordine associato non esiste.";
             }
 
-            if (logAttivita.IdContatto != null &&
-                !await _context.Contatti.AnyAsync(c => c.IdContatto == logAttivita.IdContatto))
+            if (idContatto != null &&
+                !await _context.Contatti.AnyAsync(c => c.IdContatto == idContatto))
             {
                 return "Il contatto associato non esiste.";
             }
