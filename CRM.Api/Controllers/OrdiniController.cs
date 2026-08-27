@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -33,52 +34,57 @@ namespace CRM.Api.Controllers
 
         [HttpPost]
         // POST: api/Ordini
-        public async Task<ActionResult<Ordine>> PostOrdine(Ordine ordine)
+        public async Task<ActionResult<Ordine>> PostOrdine(OrdineCreateDto ordine)
         {
-            var erroreFk = await ValidaForeignKeyAsync(ordine);
+            var erroreFk = await ValidaForeignKeyAsync(ordine.IdAgente, ordine.IdAziendaCliente, ordine.IdContattoRiferimento);
             if (erroreFk != null)
             {
                 return BadRequest(erroreFk);
             }
 
-            _context.Ordini.Add(ordine);
+            var nuovoOrdine = new Ordine
+            {
+                IdAziendaCliente = ordine.IdAziendaCliente,
+                IdAgente = ordine.IdAgente,
+                IdContattoRiferimento = ordine.IdContattoRiferimento,
+                Stato = "Aperto",
+                Note = ordine.Note
+                // DataOrdine non valorizzata: resta al default CLR (non impostato),
+                // EF la esclude dall'INSERT e lascia applicare il default DB GETDATE().
+            };
+            _context.Ordini.Add(nuovoOrdine);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetOrdine), new { id = ordine.IdOrdine }, ordine);
+            return CreatedAtAction(nameof(GetOrdine), new { id = nuovoOrdine.IdOrdine }, nuovoOrdine);
         }
 
         [HttpPut("{id}")]
         // PUT: api/Ordini/5
-        public async Task<IActionResult> PutOrdine(int id, Ordine ordine)
+        public async Task<IActionResult> PutOrdine(int id, OrdineUpdateDto ordine)
         {
-            if (id != ordine.IdOrdine)
+            var ordineEsistente = await _context.Ordini.FindAsync(id);
+            if (ordineEsistente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            var erroreFk = await ValidaForeignKeyAsync(ordine);
+            var erroreFk = await ValidaForeignKeyAsync(ordine.IdAgente, ordine.IdAziendaCliente, ordine.IdContattoRiferimento);
             if (erroreFk != null)
             {
                 return BadRequest(erroreFk);
             }
 
-            var statoAttuale = await _context.Ordini
-                .Where(o => o.IdOrdine == id)
-                .Select(o => o.Stato)
-                .FirstOrDefaultAsync();
-
-            if (statoAttuale == null)
-            {
-                return NotFound();
-            }
-
             var statiChiusi = new[] { "Vinto", "Perso", "Annullato" };
-            if (statiChiusi.Contains(statoAttuale) && ordine.Stato != statoAttuale)
+            if (statiChiusi.Contains(ordineEsistente.Stato) && ordine.Stato != ordineEsistente.Stato)
             {
-                return BadRequest($"L'ordine è già chiuso (stato: {statoAttuale}): non è possibile modificarne lo stato.");
+                return BadRequest($"L'ordine è già chiuso (stato: {ordineEsistente.Stato}): non è possibile modificarne lo stato.");
             }
 
-            _context.Entry(ordine).State = EntityState.Modified;
+            ordineEsistente.IdAziendaCliente = ordine.IdAziendaCliente;
+            ordineEsistente.IdAgente = ordine.IdAgente;
+            ordineEsistente.IdContattoRiferimento = ordine.IdContattoRiferimento;
+            ordineEsistente.Stato = ordine.Stato;
+            ordineEsistente.Note = ordine.Note;
 
             try
             {
@@ -114,20 +120,20 @@ namespace CRM.Api.Controllers
             return NoContent();
         }
 
-        private async Task<string?> ValidaForeignKeyAsync(Ordine ordine)
+        private async Task<string?> ValidaForeignKeyAsync(int idAgente, int idAziendaCliente, int? idContattoRiferimento)
         {
-            if (!await _context.Agenti.AnyAsync(a => a.IdAgente == ordine.IdAgente))
+            if (!await _context.Agenti.AnyAsync(a => a.IdAgente == idAgente))
             {
                 return "L'agente associato non esiste.";
             }
 
-            if (!await _context.AziendaClienti.AnyAsync(a => a.IdAziendaCliente == ordine.IdAziendaCliente))
+            if (!await _context.AziendaClienti.AnyAsync(a => a.IdAziendaCliente == idAziendaCliente))
             {
                 return "L'azienda cliente associata non esiste.";
             }
 
-            if (ordine.IdContattoRiferimento != null &&
-                !await _context.Contatti.AnyAsync(c => c.IdContatto == ordine.IdContattoRiferimento))
+            if (idContattoRiferimento != null &&
+                !await _context.Contatti.AnyAsync(c => c.IdContatto == idContattoRiferimento))
             {
                 return "Il contatto di riferimento associato non esiste.";
             }

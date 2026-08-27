@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRM.Data.Models;
+using CRM.Api.DTOs;
 
 namespace CRM.Api.Controllers
 {
@@ -33,40 +34,52 @@ namespace CRM.Api.Controllers
 
         [HttpPost]
         // POST: api/RigaOrdini
-        // Nota: TotaleRiga non va valorizzata qui: e' una colonna calcolata PERSISTED,
+        // Nota: TotaleRiga non compare nel DTO: e' una colonna calcolata PERSISTED,
         // configurata in OnModelCreating con HasComputedColumnSql(..., stored: true).
-        // EF la tratta come store-generated e la esclude dall'INSERT/UPDATE anche se
-        // il body della richiesta la contiene: il valore viene sempre calcolato dal DB.
-        public async Task<ActionResult<RigaOrdine>> PostRigaOrdine(RigaOrdine rigaOrdine)
+        // Il valore viene sempre calcolato dal DB, il client non deve/puo' fornirlo.
+        public async Task<ActionResult<RigaOrdine>> PostRigaOrdine(RigaOrdineCreateDto rigaOrdine)
         {
-            var erroreFk = await ValidaForeignKeyAsync(rigaOrdine);
+            var erroreFk = await ValidaForeignKeyAsync(rigaOrdine.IdOrdine, rigaOrdine.IdProdotto);
             if (erroreFk != null)
             {
                 return BadRequest(erroreFk);
             }
 
-            _context.RigaOrdini.Add(rigaOrdine);
+            var nuovaRigaOrdine = new RigaOrdine
+            {
+                IdOrdine = rigaOrdine.IdOrdine,
+                IdProdotto = rigaOrdine.IdProdotto,
+                Quantita = rigaOrdine.Quantita,
+                PrezzoPattuito = rigaOrdine.PrezzoPattuito,
+                Sconto = rigaOrdine.Sconto
+            };
+            _context.RigaOrdini.Add(nuovaRigaOrdine);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetRigaOrdine), new { id = rigaOrdine.IdRigaOrdine }, rigaOrdine);
+            return CreatedAtAction(nameof(GetRigaOrdine), new { id = nuovaRigaOrdine.IdRigaOrdine }, nuovaRigaOrdine);
         }
 
         [HttpPut("{id}")]
         // PUT: api/RigaOrdini/5
-        public async Task<IActionResult> PutRigaOrdine(int id, RigaOrdine rigaOrdine)
+        public async Task<IActionResult> PutRigaOrdine(int id, RigaOrdineUpdateDto rigaOrdine)
         {
-            if (id != rigaOrdine.IdRigaOrdine)
+            var rigaOrdineEsistente = await _context.RigaOrdini.FindAsync(id);
+            if (rigaOrdineEsistente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            var erroreFk = await ValidaForeignKeyAsync(rigaOrdine);
+            var erroreFk = await ValidaForeignKeyAsync(rigaOrdine.IdOrdine, rigaOrdine.IdProdotto);
             if (erroreFk != null)
             {
                 return BadRequest(erroreFk);
             }
 
-            _context.Entry(rigaOrdine).State = EntityState.Modified;
+            rigaOrdineEsistente.IdOrdine = rigaOrdine.IdOrdine;
+            rigaOrdineEsistente.IdProdotto = rigaOrdine.IdProdotto;
+            rigaOrdineEsistente.Quantita = rigaOrdine.Quantita;
+            rigaOrdineEsistente.PrezzoPattuito = rigaOrdine.PrezzoPattuito;
+            rigaOrdineEsistente.Sconto = rigaOrdine.Sconto;
 
             try
             {
@@ -103,14 +116,14 @@ namespace CRM.Api.Controllers
             return NoContent();
         }
 
-        private async Task<string?> ValidaForeignKeyAsync(RigaOrdine rigaOrdine)
+        private async Task<string?> ValidaForeignKeyAsync(int idOrdine, int idProdotto)
         {
-            if (!await _context.Ordini.AnyAsync(o => o.IdOrdine == rigaOrdine.IdOrdine))
+            if (!await _context.Ordini.AnyAsync(o => o.IdOrdine == idOrdine))
             {
                 return "L'ordine associato non esiste.";
             }
 
-            if (!await _context.Prodotti.AnyAsync(p => p.IdProdotto == rigaOrdine.IdProdotto))
+            if (!await _context.Prodotti.AnyAsync(p => p.IdProdotto == idProdotto))
             {
                 return "Il prodotto associato non esiste.";
             }
