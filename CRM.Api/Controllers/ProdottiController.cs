@@ -15,7 +15,7 @@ public class ProdottiController(CrmContext context) : ControllerBase
     // GET: api/Prodotti
     public async Task<ActionResult<IEnumerable<Prodotto>>> GetProdotti()
     {
-        return await _context.Prodotti.ToListAsync();
+        return await _context.Prodotti.Where(p => p.Attivo).ToListAsync();
     }
 
     [HttpGet("{id}")]

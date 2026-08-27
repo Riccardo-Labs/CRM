@@ -14,7 +14,7 @@ namespace CRM.Api.Controllers
         // GET: api/Contatti
         public async Task<ActionResult<IEnumerable<Contatto>>> GetContatti()
         {
-            var contatti = await _context.Contatti.ToListAsync();
+            var contatti = await _context.Contatti.Where(c => c.Attivo).ToListAsync();
             return Ok(contatti);
         }
 

@@ -14,7 +14,7 @@ namespace CRM.Api.Controllers
         // GET: api/Agenti
         public async Task<ActionResult<IEnumerable<Agente>>> GetAgenti()
         {
-            var agenti = await _context.Agenti.ToListAsync();
+            var agenti = await _context.Agenti.Where(a => a.Attivo).ToListAsync();
             return Ok(agenti);
         }
 

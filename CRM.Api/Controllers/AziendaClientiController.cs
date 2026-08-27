@@ -14,7 +14,7 @@ namespace CRM.Api.Controllers
         // GET: api/AziendaClienti
         public async Task<ActionResult<IEnumerable<AziendaCliente>>> GetAziendeClienti()
         {
-            var aziendeClienti = await _context.AziendaClienti.ToListAsync();
+            var aziendeClienti = await _context.AziendaClienti.Where(a => a.Attivo).ToListAsync();
             return Ok(aziendeClienti);
         }
 
