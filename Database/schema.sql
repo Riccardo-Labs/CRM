@@ -7,6 +7,7 @@
 -- 1. TABELLE SENZA DIPENDENZE
 -- ============================================
 
+
 CREATE TABLE Agente (
     id_agente INT IDENTITY(1,1) PRIMARY KEY,
     nome NVARCHAR(50) NOT NULL,
@@ -46,6 +47,22 @@ CREATE TABLE Prodotto (
 -- ============================================
 -- 2. TABELLE CON UNA DIPENDENZA
 -- ============================================
+
+CREATE TABLE Utente (                                                                                                                                                    
+    id_utente INT IDENTITY(1,1) PRIMARY KEY,                                                                                                                             
+    email NVARCHAR(100) NOT NULL UNIQUE,                                                                                                                                 
+    password_hash NVARCHAR(500) NOT NULL,                                                                                                                                
+    ruolo NVARCHAR(20) NOT NULL CHECK (ruolo IN ('Admin', 'Agente')),                                                                                                    
+    id_agente INT NULL,                                                                                                                                                  
+    attivo BIT NOT NULL DEFAULT 1,                                                                                                                                       
+    data_creazione DATETIME2 NOT NULL DEFAULT GETDATE(),                                                                                                                 
+    CONSTRAINT FK_Utente_Agente FOREIGN KEY (id_agente)                                                                                                                  
+        REFERENCES Agente(id_agente),                                                                                                                                    
+    CONSTRAINT CHK_Utente_RuoloAgente CHECK (                                                                                                                            
+        (ruolo = 'Agente' AND id_agente IS NOT NULL) OR                                                                                                                  
+        (ruolo = 'Admin' AND id_agente IS NULL)                                                                                                                          
+    )                                                                                                                                                                    
+);       
 
 CREATE TABLE Contatto (
     id_contatto INT IDENTITY(1,1) PRIMARY KEY,
