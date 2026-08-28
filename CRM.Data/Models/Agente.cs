@@ -1,4 +1,7 @@
-﻿namespace CRM.Data.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace CRM.Data.Models;
 
 public partial class Agente
 {
@@ -19,4 +22,6 @@ public partial class Agente
     public virtual ICollection<LogAttivita> LogAttivita { get; set; } = new List<LogAttivita>();
 
     public virtual ICollection<Ordine> Ordini { get; set; } = new List<Ordine>();
+
+    public virtual Utente? Utente { get; set; }
 }

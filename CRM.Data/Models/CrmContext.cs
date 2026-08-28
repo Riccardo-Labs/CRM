@@ -25,6 +25,8 @@ public partial class CrmContext : DbContext
 
     public virtual DbSet<RigaOrdine> RigaOrdini { get; set; }
 
+    public virtual DbSet<Utente> Utenti { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Agente>(entity =>
@@ -267,6 +269,39 @@ public partial class CrmContext : DbContext
                 .HasForeignKey(d => d.IdProdotto)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_RigaOrdine_Prodotto");
+        });
+
+        modelBuilder.Entity<Utente>(entity =>
+        {
+            entity.HasKey(e => e.IdUtente).HasName("PK__Utente__43BCA62E5E517FD7");
+
+            entity.ToTable("Utente");
+
+            entity.HasIndex(e => e.IdAgente, "UQ__Utente__178FE9928FC2C5F9").IsUnique();
+
+            entity.HasIndex(e => e.Email, "UQ__Utente__AB6E61647A361E3E").IsUnique();
+
+            entity.Property(e => e.IdUtente).HasColumnName("id_utente");
+            entity.Property(e => e.Attivo)
+                .HasDefaultValue(true)
+                .HasColumnName("attivo");
+            entity.Property(e => e.DataCreazione)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnName("data_creazione");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .HasColumnName("email");
+            entity.Property(e => e.IdAgente).HasColumnName("id_agente");
+            entity.Property(e => e.PasswordHash)
+                .HasMaxLength(500)
+                .HasColumnName("password_hash");
+            entity.Property(e => e.Ruolo)
+                .HasMaxLength(20)
+                .HasColumnName("ruolo");
+
+            entity.HasOne(d => d.IdAgenteNavigation).WithOne(p => p.Utente)
+                .HasForeignKey<Utente>(d => d.IdAgente)
+                .HasConstraintName("FK_Utente_Agente");
         });
 
         OnModelCreatingPartial(modelBuilder);
