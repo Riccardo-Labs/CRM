@@ -11,6 +11,7 @@ obj/
 ## Configurazione locale con credenziali
 appsettings.Development.json
 appsettings.Local.json
+Database/seed.sql
 
 ## Claude
 CLAUDE.md
