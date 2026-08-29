@@ -8,7 +8,18 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string frontendDevPolicy = "FrontendDev";
+
 // SERVICES
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(frontendDevPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add(new AuthorizeFilter());
@@ -65,6 +76,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(frontendDevPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
