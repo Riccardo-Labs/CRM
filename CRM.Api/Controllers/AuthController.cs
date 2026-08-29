@@ -21,7 +21,7 @@ namespace CRM.Api.Controllers
         [HttpPost("login")]
         [AllowAnonymous]
         // POST: api/Auth/login
-        public async Task<IActionResult> Login(LoginDto login)
+        public async Task<ActionResult<LoginResponseDto>> Login(LoginDto login)
         {
             var utente = await _context.Utenti
                 .FirstOrDefaultAsync(u => u.Email == login.Email && u.Attivo);
