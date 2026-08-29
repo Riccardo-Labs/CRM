@@ -180,7 +180,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["LoginResponseDto"];
+                        "application/json": components["schemas"]["LoginResponseDto"];
+                        "text/json": components["schemas"]["LoginResponseDto"];
+                    };
                 };
             };
         };
@@ -1446,6 +1450,11 @@ export interface components {
         LoginDto: {
             email: string | null;
             password: string | null;
+        };
+        LoginResponseDto: {
+            token: string | null;
+            email: string | null;
+            ruolo: string | null;
         };
         Ordine: {
             /** Format: int32 */
