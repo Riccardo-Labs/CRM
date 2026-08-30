@@ -1,5 +1,7 @@
 import { createContext } from "react"
 
+export const AUTH_STORAGE_KEY = "auth"
+
 export type AuthState = {
   token: string
   email: string

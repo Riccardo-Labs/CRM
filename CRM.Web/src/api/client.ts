@@ -1,6 +1,19 @@
+import { AUTH_STORAGE_KEY } from "@/features/auth/auth-context"
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5048"
 
 type Method = "GET" | "POST" | "PUT" | "DELETE"
+
+function leggiToken(): string | null {
+  const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+  if (!raw) return null
+  try {
+    const auth = JSON.parse(raw) as { token?: string }
+    return auth.token ?? null
+  } catch {
+    return null
+  }
+}
 
 // API client per interagire con l'API del backend
 export class ApiError extends Error {
@@ -16,7 +29,7 @@ export async function apiFetch<T>(
   path: string,
   options: { method?: Method; body?: unknown } = {}
 ): Promise<T> {
-  const token = localStorage.getItem("token")
+  const token = leggiToken()
 
   const risposta = await fetch(`${BASE_URL}${path}`, {
     method: options.method ?? "GET",
